@@ -33,7 +33,8 @@
   }
   input:focus,textarea:focus{outline:none;border-color:var(--sage);box-shadow:0 0 0 3px rgba(122,158,147,.16)}
   textarea{min-height:118px;resize:vertical}
-  textarea.tall{min-height:150px}
+  #story{min-height:218px}   /* 8 rows */
+  #itin{min-height:170px}    /* 6 rows */
   .req{color:var(--sage);font-weight:400}
   button{
     width:100%;border:0;border-radius:12px;padding:16px;font-size:16px;font-weight:700;
@@ -104,32 +105,15 @@
   <div class="sect">The story</div>
 
   <label>
-    <div class="lab">The judgment call</div>
-    <div class="hint">What did you book that nobody else would have? What's the obvious version you steered them away from, and why?</div>
-    <textarea id="judg" class="tall" placeholder="Everyone books Denarau — 15 minutes from the airport, eight resorts in a row. I sent them 55 miles the other way, then split the fortnight in two: culture first, private island second."></textarea>
-  </label>
-
-  <label>
-    <div class="lab">The gems</div>
-    <div class="hint">The details that don't show up on Google. A name, a hidden spot, a deal you found, a meal, a person who made it. One per line. <b>Names are worth more than places.</b></div>
-    <textarea id="gems" class="tall" placeholder="Su, the dive instructor — 1,500 dives, bull sharks at 80 feet
-David the bartender comes from a line of firewalkers
-I know the owners of the island personally
-The property knew it was a 50th before they landed"></textarea>
+    <div class="lab">Tell me about it</div>
+    <div class="hint">The decisions you made, the people you met, the details Google can't find. Stream of consciousness is fine.</div>
+    <textarea id="story" rows="8" placeholder="What did you book and why? Who made it special? Any insider deals, secret spots, relationships? Just talk about the trip — the system pulls out what it needs."></textarea>
   </label>
 
   <label>
     <div class="lab">Itinerary <span class="req">— optional</span></div>
-    <div class="hint">Rough day-by-day or property-by-property. Helps place the photos.</div>
-    <textarea id="itin" placeholder="Sep 7–11 Nanuku, Pacific Harbour
-Sep 11–16 Royal Davui, Beqa Lagoon
-Caravan out of the Pacific Harbour grass strip"></textarea>
-  </label>
-
-  <label>
-    <div class="lab">Anything else <span class="req">— optional</span></div>
-    <div class="hint">Things that went wrong, things that surprised you, anything you keep retelling.</div>
-    <textarea id="misc" placeholder=""></textarea>
+    <div class="hint">Paste from Trello, email, or anywhere. Or drop the PDF/doc in the shared photos folder — the system reads it automatically.</div>
+    <textarea id="itin" rows="6" placeholder="Paste your itinerary here — any format works. Day-by-day, property list, copy from Trello or email. Don't worry about formatting. Or skip this and drop the file into the shared Google Drive folder with your photos."></textarea>
   </label>
 
   <button class="go" onclick="build()">Generate Trip Brief</button>
@@ -144,16 +128,6 @@ Caravan out of the Pacific Harbour grass strip"></textarea>
       <div class="row">
         <button class="dl" onclick="dl('brief.txt','briefTxt')">Download</button>
         <button class="cp" onclick="cp(this,'briefTxt')">Copy</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>gems.txt</h3>
-      <p class="note">Save into <span id="p2">trips/&lt;slug&gt;/</span></p>
-      <pre id="gemsTxt"></pre>
-      <div class="row">
-        <button class="dl" onclick="dl('gems.txt','gemsTxt')">Download</button>
-        <button class="cp" onclick="cp(this,'gemsTxt')">Copy</button>
       </div>
     </div>
   </div>
@@ -187,24 +161,17 @@ function build(){
   const dest = val("dest") || "Untitled";
   const sl = slug(dest);
 
+  // one file. Bonnie talks; the engine separates judgment calls from gems later.
   let b = dest;
   const meta = [val("dur"), val("who")].filter(Boolean).join(" · ");
   if (meta) b += " — " + meta;
   b += "\n" + "=".repeat(38) + "\n";
 
-  if (val("judg")) b += "\nTHE JUDGMENT CALL\n\n" + val("judg") + "\n";
-  if (val("itin")) b += "\nITINERARY\n\n" + val("itin") + "\n";
-  if (val("misc")) b += "\nALSO WORTH KNOWING\n\n" + val("misc") + "\n";
-
-  // gems as a clean bulleted list, however she typed them
-  const lines = val("gems").split("\n").map(l => l.replace(/^[-*•\s]+/,"").trim()).filter(Boolean);
-  let g = lines.length
-    ? lines.map(l => "- " + l).join("\n") + "\n"
-    : "(none given — ask before building)\n";
+  if (val("story")) b += "\nIN BONNIE'S WORDS\n\n" + val("story") + "\n";
+  if (val("itin"))  b += "\nITINERARY\n\n" + val("itin") + "\n";
 
   $("briefTxt").textContent = b;
-  $("gemsTxt").textContent  = g;
-  $("p1").textContent = $("p2").textContent = "trips/" + sl + "/";
+  $("p1").textContent = "trips/" + sl + "/";
   $("out").classList.add("on");
   $("out").scrollIntoView({behavior:"smooth", block:"start"});
 }
