@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>New Trip — Vacations Booked</title>
+<style>
+  :root{
+    --ivory:#F7F5F2; --emerald:#135443; --sage:#7A9E93; --mist:#C7D2D2;
+    --taupe:#B6A696; --sand:#E1D9CC; --ink:#1A1714;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;background:var(--ivory);color:var(--ink);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding-bottom:60px;
+  }
+  header{background:var(--emerald);color:var(--ivory);padding:34px 20px 30px;text-align:center}
+  header .mark{font-size:11px;letter-spacing:.32em;color:var(--sage);margin-bottom:12px}
+  header h1{margin:0 0 8px;font-size:28px;font-weight:600;letter-spacing:-.01em}
+  header p{margin:0 auto;font-size:14px;color:var(--mist);max-width:32em;line-height:1.5}
+  main{max-width:560px;margin:0 auto;padding:26px 16px 0}
+  .sect{
+    margin:30px 0 14px;font-size:11px;letter-spacing:.26em;color:var(--sage);
+    text-transform:uppercase;border-bottom:1px solid var(--sand);padding-bottom:9px;
+  }
+  label{display:block;margin:20px 0 0}
+  .lab{font-size:14px;font-weight:600;color:var(--emerald);margin-bottom:3px}
+  .hint{font-size:12.5px;color:var(--taupe);margin-bottom:8px;line-height:1.45}
+  input,textarea{
+    width:100%;border:1px solid var(--sand);border-radius:11px;padding:13px;
+    font:16px/1.5 inherit;background:#fff;color:var(--ink);
+  }
+  input:focus,textarea:focus{outline:none;border-color:var(--sage);box-shadow:0 0 0 3px rgba(122,158,147,.16)}
+  textarea{min-height:118px;resize:vertical}
+  textarea.tall{min-height:150px}
+  .req{color:var(--sage);font-weight:400}
+  button{
+    width:100%;border:0;border-radius:12px;padding:16px;font-size:16px;font-weight:700;
+    cursor:pointer;font-family:inherit;letter-spacing:.02em;
+  }
+  .go{background:var(--emerald);color:var(--ivory);margin-top:26px;
+      box-shadow:0 4px 16px rgba(19,84,67,.24)}
+  .go:active{opacity:.9}
+  .out{display:none;margin-top:24px}
+  .out.on{display:block}
+  .card{background:#fff;border:1px solid var(--sand);border-radius:14px;padding:16px;margin-bottom:14px}
+  .card h3{margin:0 0 4px;font-size:14px;color:var(--emerald);
+           font-family:ui-monospace,Menlo,monospace}
+  .card p.note{margin:0 0 10px;font-size:12.5px;color:var(--taupe)}
+  pre{
+    margin:0;padding:13px;background:var(--ivory);border-radius:9px;
+    font:12.5px/1.6 ui-monospace,Menlo,monospace;white-space:pre-wrap;
+    max-height:280px;overflow:auto;border-left:3px solid var(--sand);
+  }
+  .row{display:flex;gap:9px;margin-top:11px}
+  .row button{padding:11px;font-size:13.5px}
+  .dl{background:var(--emerald);color:var(--ivory)}
+  .cp{background:#fff;color:var(--emerald);border:1.5px solid var(--emerald)!important}
+  .photos{
+    background:var(--emerald);color:var(--ivory);border-radius:16px;
+    padding:26px 20px;margin:34px 0 10px;text-align:center;
+  }
+  .photos .spark{font-size:22px;color:var(--sage);line-height:1}
+  .photos h2{margin:8px 0 8px;font-size:20px;font-weight:600}
+  .photos p{margin:0 auto 18px;font-size:14px;color:var(--mist);max-width:26em;line-height:1.55}
+  .photos a{
+    display:block;background:var(--sand);color:var(--emerald);text-decoration:none;
+    border-radius:12px;padding:16px;font-weight:700;font-size:15.5px;
+  }
+  .photos a:active{opacity:.9}
+  .photos small{display:block;margin-top:12px;font-size:12px;color:var(--sage);line-height:1.5}
+  footer{text-align:center;padding:30px 16px 10px;color:var(--taupe);font-size:12px}
+  footer .lock{font-size:12px;letter-spacing:.24em;color:var(--emerald);font-weight:700}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="mark">✦ VACATIONS BOOKED ✦</div>
+  <h1>New trip intake</h1>
+  <p>Answer what you can. Rough notes beat polished ones — the specific, unrepeatable details are what the content is built from.</p>
+</header>
+
+<main>
+  <div class="sect">The basics</div>
+
+  <label>
+    <div class="lab">Destination</div>
+    <div class="hint">Where it was. This becomes the folder name.</div>
+    <input id="dest" placeholder="Fiji" autocomplete="off">
+  </label>
+
+  <label>
+    <div class="lab">How long</div>
+    <input id="dur" placeholder="Two weeks, September 2025" autocomplete="off">
+  </label>
+
+  <label>
+    <div class="lab">Who traveled</div>
+    <input id="who" placeholder="Two couples, four people" autocomplete="off">
+  </label>
+
+  <div class="sect">The story</div>
+
+  <label>
+    <div class="lab">The judgment call</div>
+    <div class="hint">What did you book that nobody else would have? What's the obvious version you steered them away from, and why?</div>
+    <textarea id="judg" class="tall" placeholder="Everyone books Denarau — 15 minutes from the airport, eight resorts in a row. I sent them 55 miles the other way, then split the fortnight in two: culture first, private island second."></textarea>
+  </label>
+
+  <label>
+    <div class="lab">The gems</div>
+    <div class="hint">The details that don't show up on Google. A name, a hidden spot, a deal you found, a meal, a person who made it. One per line. <b>Names are worth more than places.</b></div>
+    <textarea id="gems" class="tall" placeholder="Su, the dive instructor — 1,500 dives, bull sharks at 80 feet
+David the bartender comes from a line of firewalkers
+I know the owners of the island personally
+The property knew it was a 50th before they landed"></textarea>
+  </label>
+
+  <label>
+    <div class="lab">Itinerary <span class="req">— optional</span></div>
+    <div class="hint">Rough day-by-day or property-by-property. Helps place the photos.</div>
+    <textarea id="itin" placeholder="Sep 7–11 Nanuku, Pacific Harbour
+Sep 11–16 Royal Davui, Beqa Lagoon
+Caravan out of the Pacific Harbour grass strip"></textarea>
+  </label>
+
+  <label>
+    <div class="lab">Anything else <span class="req">— optional</span></div>
+    <div class="hint">Things that went wrong, things that surprised you, anything you keep retelling.</div>
+    <textarea id="misc" placeholder=""></textarea>
+  </label>
+
+  <button class="go" onclick="build()">Generate Trip Brief</button>
+
+  <div class="out" id="out">
+    <div class="sect">Your brief</div>
+
+    <div class="card">
+      <h3>brief.txt</h3>
+      <p class="note">Save into <span id="p1">trips/&lt;slug&gt;/</span></p>
+      <pre id="briefTxt"></pre>
+      <div class="row">
+        <button class="dl" onclick="dl('brief.txt','briefTxt')">Download</button>
+        <button class="cp" onclick="cp(this,'briefTxt')">Copy</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>gems.txt</h3>
+      <p class="note">Save into <span id="p2">trips/&lt;slug&gt;/</span></p>
+      <pre id="gemsTxt"></pre>
+      <div class="row">
+        <button class="dl" onclick="dl('gems.txt','gemsTxt')">Download</button>
+        <button class="cp" onclick="cp(this,'gemsTxt')">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="photos">
+    <div class="spark">✦</div>
+    <h2>Photos &amp; videos</h2>
+    <p>Drop everything into the matching folder. Don't sort or filter — the system picks the best ones.</p>
+    <a href="https://drive.google.com/drive/folders/1PB2VUYvt5gFRg-D7vxWzj2zc1fhJi7zS?usp=sharing"
+       target="_blank" rel="noopener">Open Trip Photos →</a>
+    <small>Everything, including the blurry ones and the videos.<br>
+      A snake on the path beat every beach shot in Fiji.</small>
+  </div>
+</main>
+
+<footer>
+  <div class="lock">✦ VACATIONS BOOKED ✦</div>
+  <div style="margin-top:6px">Where every trip becomes a story</div>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const val = id => $(id).value.trim();
+
+function slug(s){
+  return (s||"trip").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
+    .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "trip";
+}
+
+function build(){
+  const dest = val("dest") || "Untitled";
+  const sl = slug(dest);
+
+  let b = dest;
+  const meta = [val("dur"), val("who")].filter(Boolean).join(" · ");
+  if (meta) b += " — " + meta;
+  b += "\n" + "=".repeat(38) + "\n";
+
+  if (val("judg")) b += "\nTHE JUDGMENT CALL\n\n" + val("judg") + "\n";
+  if (val("itin")) b += "\nITINERARY\n\n" + val("itin") + "\n";
+  if (val("misc")) b += "\nALSO WORTH KNOWING\n\n" + val("misc") + "\n";
+
+  // gems as a clean bulleted list, however she typed them
+  const lines = val("gems").split("\n").map(l => l.replace(/^[-*•\s]+/,"").trim()).filter(Boolean);
+  let g = lines.length
+    ? lines.map(l => "- " + l).join("\n") + "\n"
+    : "(none given — ask before building)\n";
+
+  $("briefTxt").textContent = b;
+  $("gemsTxt").textContent  = g;
+  $("p1").textContent = $("p2").textContent = "trips/" + sl + "/";
+  $("out").classList.add("on");
+  $("out").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function dl(name, id){
+  const blob = new Blob([$(id).textContent], {type:"text/plain;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 800);
+}
+
+function cp(btn, id){
+  const t = $(id).textContent;
+  const done = () => { const o = btn.textContent; btn.textContent = "Copied ✓";
+                       setTimeout(()=>btn.textContent = o, 1600); };
+  if (navigator.clipboard) navigator.clipboard.writeText(t).then(done).catch(fallback);
+  else fallback();
+  function fallback(){
+    const ta = document.createElement("textarea");
+    ta.value = t; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); ta.remove(); done();
+  }
+}
+</script>
+</body>
+</html>
