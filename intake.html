@@ -262,7 +262,7 @@
         <input type="file" id="itinFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.heic">
         <div class="uz-icon">📄</div>
         <div class="uz-label" id="itinLabel">Tap to attach itinerary</div>
-        <div class="uz-hint">Optional — or drop it in Drive with photos</div>
+        <div class="uz-hint">Optional — uploads to Drive with your photos</div>
       </div>
     </div>
 
@@ -362,7 +362,7 @@
     API_KEY: 'AIzaSyAUvKT3C2_oSf6b1glsh79nKOiyjKse8nE',
     SHARED_FOLDER_ID: '1PB2VUYvt5gFRg-D7vxWzj2zc1fhJi7zS',
     JEFF_EMAIL: 'jeffs@chrp.ai',
-    SCOPES: 'https://www.googleapis.com/auth/drive.file',
+    SCOPES: 'https://www.googleapis.com/auth/drive',
   };
 
   let accessToken = null;
@@ -394,7 +394,7 @@
     brief += `Travelers: ${who || '—'}\n`;
     brief += `Folder: ${slug}\n\n---\n\n`;
     brief += `THE STORY:\n${story}\n`;
-    if (itinFile) brief += `\n---\n\nITINERARY: ${itinFile.name} — attached to this email or in the Drive folder.\n`;
+    if (itinFile) brief += `\n---\n\nITINERARY: ${itinFile.name} — uploaded to the Drive folder with your photos.\n`;
     brief += `\n---\nPhotos uploading to Drive → ${slug}`;
 
     const subj = encodeURIComponent(`Trip brief: ${dest}`);
@@ -497,16 +497,40 @@
     }
   });
 
+  // an itinerary with no photos still needs a way up
+  document.getElementById('itinFile').addEventListener('change', function() {
+    if (this.files.length > 0) {
+      document.getElementById('uploadBtn').disabled = false;
+    }
+  });
+
+  // ── Single-file upload to Drive ──
+  async function uploadOne(file, folderId) {
+    const form = new FormData();
+    form.append('metadata', new Blob(
+      [JSON.stringify({ name: file.name, parents: [folderId] })],
+      { type: 'application/json' }));
+    form.append('file', file);
+    const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+      body: form,
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r;
+  }
+
   // ── Upload to Drive ──
   async function uploadPhotos() {
     const files = photoInput.files;
+    const itinFile = document.getElementById('itinFile').files[0];
     const folderId = document.getElementById('folderSelect').value;
 
     if (!folderId) {
       alert('Pick a destination folder first.');
       return;
     }
-    if (files.length === 0) return;
+    if (files.length === 0 && !itinFile) return;
 
     const btn = document.getElementById('uploadBtn');
     const prog = document.getElementById('uploadProgress');
@@ -518,7 +542,20 @@
     prog.classList.add('visible');
 
     let done = 0;
-    const total = files.length;
+    const total = files.length + (itinFile ? 1 : 0);
+
+    // the itinerary goes up first, so it's there even if the photos stall
+    if (itinFile) {
+      text.textContent = 'Uploading itinerary...';
+      try {
+        await uploadOne(itinFile, folderId);
+      } catch (e) {
+        text.textContent = `Itinerary failed — continuing with photos...`;
+      }
+      done++;
+      fill.style.width = Math.round((done / total) * 100) + '%';
+      text.textContent = `${done} of ${total} uploaded`;
+    }
 
     for (const file of files) {
       try {
