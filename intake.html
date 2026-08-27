@@ -367,6 +367,11 @@
 
   let accessToken = null;
   let selectedFolderId = null;
+  let uploadFolderId = null;              // the "photos & video" child we upload into
+
+  // Bonnie picks "cabo"; her files land in cabo/photos & video/ without her
+  // ever seeing the subfolder.
+  const PHOTO_SUBFOLDER = 'photos & video';
 
   // ── Itinerary file feedback ──
   document.getElementById('itinFile').addEventListener('change', function() {
@@ -460,8 +465,12 @@
       select.innerHTML = '<option value="">Could not load folders</option>';
     }
 
-    select.addEventListener('change', () => {
+    select.addEventListener('change', async () => {
       selectedFolderId = select.value;
+      uploadFolderId = null;
+      if (selectedFolderId) {
+        try { uploadFolderId = await findSubfolder(selectedFolderId); } catch (e) {}
+      }
     });
   }
 
@@ -504,6 +513,38 @@
     }
   });
 
+  // ── The "photos & video" child of the chosen destination ──
+  // Listing children and matching client-side beats a name= query: it sidesteps
+  // quoting the ampersand, and it matches whatever casing already exists.
+  async function findSubfolder(parentId) {
+    const q = `'${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+    const r = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`,
+      { headers: { 'Authorization': `Bearer ${accessToken}` } });
+    if (!r.ok) return null;
+    const data = await r.json();
+    const hit = (data.files || []).find(f =>
+      f.name.trim().toLowerCase() === PHOTO_SUBFOLDER);
+    return hit ? hit.id : null;
+  }
+
+  async function createSubfolder(parentId) {
+    const r = await fetch('https://www.googleapis.com/drive/v3/files?fields=id', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: PHOTO_SUBFOLDER,
+        mimeType: 'application/vnd.google-apps.folder',
+        parents: [parentId],
+      }),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return (await r.json()).id;
+  }
+
   // ── Single-file upload to Drive ──
   async function uploadOne(file, folderId) {
     const form = new FormData();
@@ -541,6 +582,18 @@
     btn.textContent = 'Uploading...';
     prog.classList.add('visible');
 
+    // resolved on selection; created here the first time a destination is used
+    let targetId = uploadFolderId;
+    if (!targetId) {
+      text.textContent = 'Setting up the folder...';
+      try {
+        targetId = await findSubfolder(folderId) || await createSubfolder(folderId);
+        uploadFolderId = targetId;
+      } catch (e) {
+        targetId = folderId;        // never lose the files over a folder we couldn't make
+      }
+    }
+
     let done = 0;
     const total = files.length + (itinFile ? 1 : 0);
 
@@ -548,7 +601,7 @@
     if (itinFile) {
       text.textContent = 'Uploading itinerary...';
       try {
-        await uploadOne(itinFile, folderId);
+        await uploadOne(itinFile, targetId);
       } catch (e) {
         text.textContent = `Itinerary failed — continuing with photos...`;
       }
@@ -562,7 +615,7 @@
         // Create metadata
         const metadata = {
           name: file.name,
-          parents: [folderId],
+          parents: [targetId],
         };
 
         const form = new FormData();
@@ -583,7 +636,7 @@
         text.textContent = `Error on ${file.name} — retrying...`;
         // Simple retry
         try {
-          const metadata = { name: file.name, parents: [folderId] };
+          const metadata = { name: file.name, parents: [targetId] };
           const form = new FormData();
           form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
           form.append('file', file);
