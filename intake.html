@@ -6,30 +6,6 @@
 <title>New Trip — Vacations Booked</title>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Mulish:wght@400;600;700&display=swap" rel="stylesheet">
 
-<!--
-  ╔══════════════════════════════════════════════════════════════╗
-  ║  SETUP (one-time, takes ~10 minutes)                         ║
-  ║                                                              ║
-  ║  1. Go to console.cloud.google.com                           ║
-  ║  2. Create a new project (or use existing)                   ║
-  ║  3. Enable "Google Drive API" in APIs & Services             ║
-  ║  4. Go to Credentials → Create Credentials:                  ║
-  ║     a. API Key → copy it → paste below as API_KEY            ║
-  ║     b. OAuth 2.0 Client ID (Web application type)            ║
-  ║        - Authorized JS origins: add your GitHub Pages URL    ║
-  ║          (https://chrp-bass.github.io)                       ║
-  ║        - Copy the Client ID → paste below as CLIENT_ID       ║
-  ║  5. Configure OAuth consent screen:                          ║
-  ║     - User type: External                                   ║
-  ║     - Add Bonnie's email as a test user                      ║
-  ║     - Scopes: .../auth/drive.file                            ║
-  ║  6. Replace SHARED_FOLDER_ID below with your folder ID       ║
-  ║     (the string after /folders/ in your Drive URL)            ║
-  ║  7. Replace JEFF_EMAIL with your email address               ║
-  ║  8. Push to GitHub Pages and send Bonnie the link            ║
-  ╚══════════════════════════════════════════════════════════════╝
--->
-
 <style>
   :root {
     --emerald: #135443;
@@ -220,8 +196,7 @@
     color: var(--sage); font-weight: 600;
   }
   .status-sent.visible, .status-uploaded.visible { display: block; }
-</style>
-</head>
+</style></head>
 <body>
 
 <div class="header">
@@ -232,9 +207,42 @@
 
 <div class="container">
 
-  <!-- 1. THE BASICS + STORY -->
+  <!-- 1. CONNECT — first, so nothing below it is blocked -->
   <div class="section">
-    <div class="section-label"><span class="num">1</span> Tell me about the trip</div>
+    <div class="section-label"><span class="num">1</span> Connect Google Drive</div>
+
+    <div class="connect-card" id="connectCard">
+      <p>Connect once. Your brief, itinerary and photos then save straight into the right Drive folder.</p>
+      <button class="btn-primary" id="connectBtn" onclick="handleAuth()">
+        Connect Google Drive
+      </button>
+    </div>
+
+    <div id="connectedState" style="display:none;">
+      <div class="connected-badge">✓ Connected to Google Drive</div>
+      <div class="field">
+        <label for="folderSelect">Destination folder</label>
+        <div class="hint">Matched from what you type below — change it only if it picks wrong.</div>
+        <select id="folderSelect">
+          <option value="">Loading folders...</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="fallbackDrive" style="display:none; margin-top: 16px;">
+      <a href="https://drive.google.com/drive/folders/1PB2VUYvt5gFRg-D7vxWzj2zc1fhJi7zS?usp=sharing"
+         class="btn-secondary">Open Drive folder instead →</a>
+      <div class="tip">
+        <strong>✦ On iPhone:</strong> Google Drive app → destination folder → + → Upload → Photos and Videos → select all.
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 2. THE TRIP -->
+  <div class="section">
+    <div class="section-label"><span class="num">2</span> Tell me about the trip</div>
 
     <div class="field">
       <label for="destination">Where was it?</label>
@@ -262,86 +270,47 @@
         <input type="file" id="itinFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.heic">
         <div class="uz-icon">📄</div>
         <div class="uz-label" id="itinLabel">Tap to attach itinerary</div>
-        <div class="uz-hint">Optional — uploads to Drive with your photos</div>
+        <div class="uz-hint">Optional — uploads to Drive with your brief</div>
       </div>
     </div>
-
-    <button class="btn-primary" id="sendBriefBtn" onclick="sendBrief()">
-      Send trip details to Jeff →
-    </button>
-    <div class="tip" style="text-align:center;">
-      <strong>✦</strong> Opens a pre-filled email. Just tap send.
-    </div>
-    <div class="status-sent" id="briefSent">✓ Trip details sent</div>
   </div>
 
   <div class="divider"></div>
 
-  <!-- 2. PHOTOS — GOOGLE DRIVE DIRECT UPLOAD -->
+  <!-- 3. PHOTOS -->
   <div class="section">
-    <div class="section-label"><span class="num">2</span> Upload photos & videos</div>
+    <div class="section-label"><span class="num">3</span> Photos &amp; videos</div>
 
-    <!-- Connect to Google (one-time) -->
-    <div class="connect-card" id="connectCard">
-      <p>Connect your Google account once so photos upload straight into the right Drive folder.</p>
-      <button class="btn-primary" id="connectBtn" onclick="handleAuth()">
-        Connect Google Drive
-      </button>
+    <div class="upload-zone" id="photoZone">
+      <input type="file" id="photoFiles" multiple accept="image/*,video/*,.heic,.heif,.mov,.mp4">
+      <div class="uz-icon">📸</div>
+      <div class="uz-label">Tap to select photos &amp; videos</div>
+      <div class="uz-hint">Select everything — don't sort or filter</div>
     </div>
 
-    <!-- Connected state -->
-    <div id="connectedState" style="display:none;">
-      <div class="connected-badge">✓ Connected to Google Drive</div>
+    <div class="file-list" id="photoList"></div>
 
-      <!-- Folder picker -->
-      <div class="field">
-        <label for="folderSelect">Destination folder</label>
-        <select id="folderSelect">
-          <option value="">Loading folders...</option>
-        </select>
-      </div>
-
-      <!-- Photo upload zone -->
-      <div class="upload-zone" id="photoZone">
-        <input type="file" id="photoFiles" multiple accept="image/*,video/*,.heic,.heif,.mov,.mp4">
-        <div class="uz-icon">📸</div>
-        <div class="uz-label">Tap to select photos & videos</div>
-        <div class="uz-hint">Select everything — don't sort or filter</div>
-      </div>
-
-      <div class="file-list" id="photoList"></div>
-
-      <div class="upload-progress" id="uploadProgress">
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="progressFill"></div>
-        </div>
-        <div class="progress-text" id="progressText">Uploading...</div>
-      </div>
-
-      <button class="btn-primary" id="uploadBtn" onclick="uploadPhotos()" style="margin-top:16px;" disabled>
-        Upload to Drive →
-      </button>
-
-      <div class="tip">
-        <strong>✦</strong> Select everything from your camera roll for this trip. Blurry shots, duplicates, random videos — all of it. The system picks the heroes.
-      </div>
-
-      <div class="status-uploaded" id="uploadDone">✓ All photos uploaded</div>
-    </div>
-
-    <!-- Fallback for no API setup -->
-    <div id="fallbackDrive" style="display:none; margin-top: 16px;">
-      <a href="https://drive.google.com/drive/folders/1PB2VUYvt5gFRg-D7vxWzj2zc1fhJi7zS?usp=sharing"
-         class="btn-secondary">
-        Open Drive folder instead →
-      </a>
-      <div class="tip">
-        <strong>✦ On iPhone:</strong> Google Drive app → destination folder → + → Upload → Photos and Videos → select all.
-      </div>
+    <div class="tip">
+      <strong>✦</strong> Select everything from your camera roll for this trip. Blurry shots, duplicates, random videos — all of it. The system picks the heroes.
     </div>
   </div>
 
-  <!-- DONE -->
+  <!-- 4. ONE BUTTON -->
+  <div class="section">
+    <div class="upload-progress" id="uploadProgress">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+      <div class="progress-text" id="progressText">Uploading...</div>
+    </div>
+
+    <button class="btn-primary" id="saveBtn" onclick="saveEverything()" style="margin-top:16px;">
+      Save everything to Drive &amp; notify Jeff →
+    </button>
+    <div class="tip" style="text-align:center;">
+      <strong>✦</strong> Brief and itinerary go in the destination folder. Photos go in <em>photos &amp; video</em>.
+    </div>
+    <div class="status-uploaded" id="allDone">✓ Done — Jeff has been notified</div>
+  </div>
+
   <div class="done-card" id="doneCard">
     <div class="sparkle">✦</div>
     <h3>That's it.</h3>
@@ -365,70 +334,32 @@
     SCOPES: 'https://www.googleapis.com/auth/drive',
   };
 
-  let accessToken = null;
-  let selectedFolderId = null;
-  let uploadFolderId = null;              // the "photos & video" child we upload into
-
-  // Bonnie picks "cabo"; her files land in cabo/photos & video/ without her
-  // ever seeing the subfolder.
+  // Bonnie picks "cabo"; her photos land in cabo/photos & video/ without her
+  // ever seeing the subfolder. The brief and itinerary stay in the root.
   const PHOTO_SUBFOLDER = 'photos & video';
 
-  // ── Itinerary file feedback ──
-  document.getElementById('itinFile').addEventListener('change', function() {
-    if (this.files.length > 0) {
-      document.getElementById('itinZone').classList.add('has-files');
-      document.getElementById('itinLabel').textContent = '✓ ' + this.files[0].name;
-    }
-  });
+  let accessToken = null;
+  let folderList = [];          // {id, name} under the shared root
+  let uploadFolderId = null;    // resolved "photos & video" child
 
-  // ── Send brief via email ──
-  function sendBrief() {
-    const dest = document.getElementById('destination').value.trim();
-    const dur = document.getElementById('duration').value.trim();
-    const who = document.getElementById('who').value.trim();
-    const story = document.getElementById('story').value.trim();
-
-    if (!dest) { document.getElementById('destination').focus(); return; }
-    if (!story) { document.getElementById('story').focus(); return; }
-
-    const slug = dest.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const itinFile = document.getElementById('itinFile').files[0];
-
-    let brief = `TRIP BRIEF: ${dest}\n`;
-    brief += `Duration: ${dur || '—'}\n`;
-    brief += `Travelers: ${who || '—'}\n`;
-    brief += `Folder: ${slug}\n\n---\n\n`;
-    brief += `THE STORY:\n${story}\n`;
-    if (itinFile) brief += `\n---\n\nITINERARY: ${itinFile.name} — uploaded to the Drive folder with your photos.\n`;
-    brief += `\n---\nPhotos uploading to Drive → ${slug}`;
-
-    const subj = encodeURIComponent(`Trip brief: ${dest}`);
-    const body = encodeURIComponent(brief);
-    const to = encodeURIComponent(CONFIG.JEFF_EMAIL);
-    window.location.href = `mailto:${to}?subject=${subj}&body=${body}`;
-
-    document.getElementById('briefSent').classList.add('visible');
-    document.getElementById('sendBriefBtn').textContent = '✓ Sent';
-    document.getElementById('sendBriefBtn').disabled = true;
-  }
+  const $ = id => document.getElementById(id);
+  const slugify = t => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
   // ── Google OAuth ──
   function handleAuth() {
-    // Check if API is configured
     if (!CONFIG.CLIENT_ID || CONFIG.CLIENT_ID.startsWith('YOUR_')) {
-      document.getElementById('connectCard').style.display = 'none';
-      document.getElementById('fallbackDrive').style.display = 'block';
+      $('connectCard').style.display = 'none';
+      $('fallbackDrive').style.display = 'block';
       return;
     }
-
     const client = google.accounts.oauth2.initTokenClient({
       client_id: CONFIG.CLIENT_ID,
       scope: CONFIG.SCOPES,
       callback: (response) => {
         if (response.access_token) {
           accessToken = response.access_token;
-          document.getElementById('connectCard').style.display = 'none';
-          document.getElementById('connectedState').style.display = 'block';
+          $('connectCard').style.display = 'none';
+          $('connectedState').style.display = 'block';
           loadFolders();
         }
       },
@@ -436,84 +367,45 @@
     client.requestAccessToken();
   }
 
-  // ── Load subfolders from shared Drive folder ──
+  // ── Destination folders under the shared root ──
   async function loadFolders() {
-    const select = document.getElementById('folderSelect');
+    const select = $('folderSelect');
     try {
+      const q = `'${CONFIG.SHARED_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
       const resp = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q='${CONFIG.SHARED_FOLDER_ID}'+in+parents+and+mimeType='application/vnd.google-apps.folder'&fields=files(id,name)&orderBy=name&key=${CONFIG.API_KEY}`,
-        { headers: { 'Authorization': `Bearer ${accessToken}` } }
-      );
+        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&orderBy=name`,
+        { headers: { 'Authorization': `Bearer ${accessToken}` } });
       const data = await resp.json();
+      folderList = data.files || [];
       select.innerHTML = '<option value="">Choose destination...</option>';
-      (data.files || []).forEach(f => {
+      folderList.forEach(f => {
         const opt = document.createElement('option');
-        opt.value = f.id;
-        opt.textContent = f.name;
+        opt.value = f.id; opt.textContent = f.name;
         select.appendChild(opt);
       });
-
-      // Auto-match from destination field
-      const dest = document.getElementById('destination').value.trim().toLowerCase();
-      if (dest) {
-        const match = (data.files || []).find(f =>
-          f.name.toLowerCase().includes(dest) || dest.includes(f.name.toLowerCase())
-        );
-        if (match) select.value = match.id;
-      }
+      matchFolder();
     } catch (e) {
       select.innerHTML = '<option value="">Could not load folders</option>';
     }
-
-    select.addEventListener('change', async () => {
-      selectedFolderId = select.value;
-      uploadFolderId = null;
-      if (selectedFolderId) {
-        try { uploadFolderId = await findSubfolder(selectedFolderId); } catch (e) {}
-      }
-    });
   }
 
-  // ── Photo file selection ──
-  const photoInput = document.getElementById('photoFiles');
-  photoInput.addEventListener('change', function() {
-    const list = document.getElementById('photoList');
-    const zone = document.getElementById('photoZone');
-    list.innerHTML = '';
+  // ── D: pre-select the folder from whatever she typed ──
+  function matchFolder() {
+    const select = $('folderSelect');
+    if (select.value) return;                   // she already chose one; leave it
+    const dest = $('destination').value.trim().toLowerCase();
+    if (!dest || !folderList.length) return;
+    const slug = slugify(dest);
+    const hit = folderList.find(f => {
+      const n = f.name.trim().toLowerCase();
+      return n === dest || n === slug || dest.includes(n) || slug.includes(slugify(n));
+    });
+    if (hit) { select.value = hit.id; uploadFolderId = null; }
+  }
+  $('destination').addEventListener('blur', matchFolder);
+  $('folderSelect').addEventListener('change', () => { uploadFolderId = null; });
 
-    if (this.files.length > 0) {
-      zone.classList.add('has-files');
-      const count = this.files.length;
-      const totalMB = Array.from(this.files).reduce((s, f) => s + f.size, 0) / (1024*1024);
-
-      for (let i = 0; i < Math.min(count, 5); i++) {
-        const f = this.files[i];
-        const sizeMB = (f.size / (1024*1024)).toFixed(1);
-        list.innerHTML += `<div class="file-item">
-          <span class="file-check">✓</span>
-          <span>${f.name}</span>
-          <span class="file-size">${sizeMB} MB</span>
-        </div>`;
-      }
-      if (count > 5) {
-        list.innerHTML += `<div class="file-item" style="color:var(--taupe);">
-          + ${count - 5} more files (${totalMB.toFixed(0)} MB total)
-        </div>`;
-      }
-
-      document.getElementById('uploadBtn').disabled = false;
-      document.getElementById('uploadBtn').textContent = `Upload ${count} file${count > 1 ? 's' : ''} to Drive →`;
-    }
-  });
-
-  // an itinerary with no photos still needs a way up
-  document.getElementById('itinFile').addEventListener('change', function() {
-    if (this.files.length > 0) {
-      document.getElementById('uploadBtn').disabled = false;
-    }
-  });
-
-  // ── The "photos & video" child of the chosen destination ──
+  // ── B: the "photos & video" child of the destination ──
   // Listing children and matching client-side beats a name= query: it sidesteps
   // quoting the ampersand, and it matches whatever casing already exists.
   async function findSubfolder(parentId) {
@@ -523,18 +415,14 @@
       { headers: { 'Authorization': `Bearer ${accessToken}` } });
     if (!r.ok) return null;
     const data = await r.json();
-    const hit = (data.files || []).find(f =>
-      f.name.trim().toLowerCase() === PHOTO_SUBFOLDER);
+    const hit = (data.files || []).find(f => f.name.trim().toLowerCase() === PHOTO_SUBFOLDER);
     return hit ? hit.id : null;
   }
 
   async function createSubfolder(parentId) {
     const r = await fetch('https://www.googleapis.com/drive/v3/files?fields=id', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: PHOTO_SUBFOLDER,
         mimeType: 'application/vnd.google-apps.folder',
@@ -545,13 +433,13 @@
     return (await r.json()).id;
   }
 
-  // ── Single-file upload to Drive ──
-  async function uploadOne(file, folderId) {
+  // ── Single upload. Takes a File, or a Blob plus a name. ──
+  async function uploadOne(blob, folderId, name) {
     const form = new FormData();
     form.append('metadata', new Blob(
-      [JSON.stringify({ name: file.name, parents: [folderId] })],
+      [JSON.stringify({ name: name || blob.name, parents: [folderId] })],
       { type: 'application/json' }));
-    form.append('file', file);
+    form.append('file', blob);
     const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${accessToken}` },
@@ -561,114 +449,155 @@
     return r;
   }
 
-  // ── Upload to Drive ──
-  async function uploadPhotos() {
-    const files = photoInput.files;
-    const itinFile = document.getElementById('itinFile').files[0];
-    const folderId = document.getElementById('folderSelect').value;
+  // ── File pickers: feedback only ──
+  $('itinFile').addEventListener('change', function() {
+    if (this.files.length > 0) {
+      $('itinZone').classList.add('has-files');
+      $('itinLabel').textContent = '✓ ' + this.files[0].name;
+    }
+  });
 
-    if (!folderId) {
-      alert('Pick a destination folder first.');
+  $('photoFiles').addEventListener('change', function() {
+    const list = $('photoList');
+    list.innerHTML = '';
+    if (this.files.length === 0) return;
+    $('photoZone').classList.add('has-files');
+    const count = this.files.length;
+    const totalMB = Array.from(this.files).reduce((s, f) => s + f.size, 0) / (1024*1024);
+    for (let i = 0; i < Math.min(count, 5); i++) {
+      const f = this.files[i];
+      list.innerHTML += `<div class="file-item">
+        <span class="file-check">✓</span>
+        <span>${f.name}</span>
+        <span class="file-size">${(f.size / (1024*1024)).toFixed(1)} MB</span>
+      </div>`;
+    }
+    if (count > 5) {
+      list.innerHTML += `<div class="file-item" style="color:var(--taupe);">
+        + ${count - 5} more files (${totalMB.toFixed(0)} MB total)
+      </div>`;
+    }
+  });
+
+  // ── A: the brief text ──
+  function buildBrief(dest, dur, who, story, itinName) {
+    let brief = `TRIP BRIEF: ${dest}\n`;
+    brief += `Duration: ${dur || '—'}\n`;
+    brief += `Travelers: ${who || '—'}\n`;
+    brief += `Folder: ${slugify(dest)}\n\n---\n\n`;
+    brief += `THE STORY:\n${story}\n`;
+    if (itinName) brief += `\n---\n\nITINERARY: ${itinName} — in this folder.\n`;
+    return brief;
+  }
+
+  // ── The one button ──
+  async function saveEverything() {
+    const dest = $('destination').value.trim();
+    const dur = $('duration').value.trim();
+    const who = $('who').value.trim();
+    const story = $('story').value.trim();
+    const itinFile = $('itinFile').files[0];
+    const photos = $('photoFiles').files;
+
+    if (!accessToken) {
+      $('progressText').textContent = 'Connect Google Drive first to save your brief';
+      $('uploadProgress').classList.add('visible');
+      $('connectBtn').scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
-    if (files.length === 0 && !itinFile) return;
+    if (!dest) { $('destination').focus(); return; }
+    if (!story) { $('story').focus(); return; }
 
-    const btn = document.getElementById('uploadBtn');
-    const prog = document.getElementById('uploadProgress');
-    const fill = document.getElementById('progressFill');
-    const text = document.getElementById('progressText');
+    matchFolder();
+    const rootId = $('folderSelect').value;
+    if (!rootId) {
+      alert('Pick a destination folder first.');
+      $('folderSelect').focus();
+      return;
+    }
 
+    const btn = $('saveBtn'), prog = $('uploadProgress');
+    const fill = $('progressFill'), text = $('progressText');
     btn.disabled = true;
-    btn.textContent = 'Uploading...';
+    btn.textContent = 'Saving...';
     prog.classList.add('visible');
 
-    // resolved on selection; created here the first time a destination is used
-    let targetId = uploadFolderId;
-    if (!targetId) {
-      text.textContent = 'Setting up the folder...';
-      try {
-        targetId = await findSubfolder(folderId) || await createSubfolder(folderId);
-        uploadFolderId = targetId;
-      } catch (e) {
-        targetId = folderId;        // never lose the files over a folder we couldn't make
-      }
-    }
-
+    const total = 1 + (itinFile ? 1 : 0) + photos.length;
     let done = 0;
-    const total = files.length + (itinFile ? 1 : 0);
-
-    // the itinerary goes up first, so it's there even if the photos stall
-    if (itinFile) {
-      text.textContent = 'Uploading itinerary...';
-      try {
-        await uploadOne(itinFile, targetId);
-      } catch (e) {
-        text.textContent = `Itinerary failed — continuing with photos...`;
-      }
+    const step = (label) => {
       done++;
       fill.style.width = Math.round((done / total) * 100) + '%';
-      text.textContent = `${done} of ${total} uploaded`;
+      text.textContent = label || `${done} of ${total} uploaded`;
+    };
+
+    // brief.txt → destination root
+    text.textContent = 'Saving brief...';
+    try {
+      const brief = buildBrief(dest, dur, who, story, itinFile && itinFile.name);
+      await uploadOne(new Blob([brief], { type: 'text/plain' }), rootId, 'brief.txt');
+      step();
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = 'Save everything to Drive & notify Jeff →';
+      text.textContent = 'Could not save the brief — check the connection and try again.';
+      return;                                   // nothing else is worth doing without it
     }
 
-    for (const file of files) {
-      try {
-        // Create metadata
-        const metadata = {
-          name: file.name,
-          parents: [targetId],
-        };
+    // itinerary → destination root, beside the brief
+    if (itinFile) {
+      text.textContent = 'Saving itinerary...';
+      try { await uploadOne(itinFile, rootId); } catch (e) {}
+      step();
+    }
 
-        const form = new FormData();
-        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-        form.append('file', file);
-
-        await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${accessToken}` },
-          body: form,
-        });
-
-        done++;
-        const pct = Math.round((done / total) * 100);
-        fill.style.width = pct + '%';
-        text.textContent = `${done} of ${total} uploaded`;
-      } catch (e) {
-        text.textContent = `Error on ${file.name} — retrying...`;
-        // Simple retry
+    // photos → the "photos & video" child
+    if (photos.length) {
+      let targetId = uploadFolderId;
+      if (!targetId) {
+        text.textContent = 'Setting up the photo folder...';
         try {
-          const metadata = { name: file.name, parents: [targetId] };
-          const form = new FormData();
-          form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-          form.append('file', file);
-          await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${accessToken}` },
-            body: form,
-          });
-          done++;
-          fill.style.width = Math.round((done / total) * 100) + '%';
-          text.textContent = `${done} of ${total} uploaded`;
-        } catch (e2) {
-          text.textContent = `Failed on ${file.name} — continuing...`;
-          done++;
+          targetId = await findSubfolder(rootId) || await createSubfolder(rootId);
+          uploadFolderId = targetId;
+        } catch (e) {
+          targetId = rootId;      // never lose the files over a folder we couldn't make
         }
+      }
+      for (const file of photos) {
+        try {
+          await uploadOne(file, targetId);
+        } catch (e) {
+          try { await uploadOne(file, targetId); } catch (e2) {}   // one retry
+        }
+        step();
       }
     }
 
     fill.style.width = '100%';
-    text.textContent = `All ${total} files uploaded ✓`;
-    btn.textContent = '✓ All uploaded';
-    document.getElementById('uploadDone').classList.add('visible');
+    text.textContent = `Everything saved to ${dest} ✓`;
+    btn.textContent = '✓ Brief saved to Drive';
+    $('allDone').classList.add('visible');
+
+    notifyJeff(dest);
   }
 
-  // ── On load: check if API is configured ──
+  // ── A: the short notification ──
+  function notifyJeff(dest) {
+    const slug = slugify(dest);
+    const subj = encodeURIComponent(`Trip ready: ${dest}`);
+    const body = encodeURIComponent(
+      `${dest} is in Drive. Photos, brief, and itinerary are all there. ` +
+      `Open terminal and run: ./pull-trip ${slug}`);
+    window.location.href =
+      `mailto:${encodeURIComponent(CONFIG.JEFF_EMAIL)}?subject=${subj}&body=${body}`;
+  }
+
+  // ── On load: fall back if the API was never configured ──
   window.addEventListener('load', () => {
     if (!CONFIG.CLIENT_ID || CONFIG.CLIENT_ID.startsWith('YOUR_')) {
-      // Show fallback immediately
-      document.getElementById('connectCard').querySelector('p').textContent =
+      $('connectCard').querySelector('p').textContent =
         'Photo upload is being set up. For now, use the Drive app:';
-      document.getElementById('connectBtn').textContent = 'Open Drive folder →';
-      document.getElementById('connectBtn').onclick = () => {
+      $('connectBtn').textContent = 'Open Drive folder →';
+      $('connectBtn').onclick = () => {
         window.open('https://drive.google.com/drive/folders/' + CONFIG.SHARED_FOLDER_ID, '_blank');
       };
     }
